@@ -5,9 +5,12 @@ import {
   RegisterBody,
   RegisterBodyType,
 } from '../schemaValidations/auth.schema';
+import { toast } from 'react-toastify';
+import { Link, useNavigate } from 'react-router-dom';
+import { FaSpinner } from 'react-icons/fa';
 
 const RegisterPage: React.FC = () => {
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
@@ -16,17 +19,44 @@ const RegisterPage: React.FC = () => {
   } = useForm<RegisterBodyType>({
     resolver: zodResolver(RegisterBody),
     defaultValues: {
+      username: '',
       email: '',
       password: '',
+      confirmPassword: '',
     },
   });
 
-  const onSubmit = (data: RegisterBodyType) => {
-    if (data.password !== confirmPassword) {
-      alert('Passwords do not match');
-      return;
+  const notify = () => toast.success('Sign up successfully!');
+
+  const navigate = useNavigate();
+
+  const onSubmit = async (data: RegisterBodyType) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
+        return;
+      }
+
+      const result = await response.json();
+      notify();
+      setIsLoading(false);
+      navigate('/login');
+      return result;
+    } catch (error) {
+      console.error('Error:', error);
+      setIsLoading(false);
+      alert('An error occurred. Please try again.');
     }
-    console.log('Form Data', data);
   };
 
   return (
@@ -55,6 +85,24 @@ const RegisterPage: React.FC = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
             <label
+              htmlFor="username"
+              className="block mb-1 text-sm font-medium text-gray-700"
+            >
+              Username
+            </label>
+            <input
+              id="username"
+              {...register('username')}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter your username"
+            />
+            {errors.username && (
+              <p className="text-sm text-red-600">{errors.username.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label
               htmlFor="email"
               className="block mb-1 text-sm font-medium text-gray-700"
             >
@@ -62,7 +110,7 @@ const RegisterPage: React.FC = () => {
             </label>
             <input
               id="email"
-              {...register('email', { required: 'Email is required' })}
+              {...register('email')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter your email"
             />
@@ -81,7 +129,7 @@ const RegisterPage: React.FC = () => {
             <input
               id="password"
               type="password"
-              {...register('password', { required: 'Password is required' })}
+              {...register('password')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter your password"
             />
@@ -100,28 +148,42 @@ const RegisterPage: React.FC = () => {
             <input
               id="confirmPassword"
               type="password"
+              {...register('confirmPassword')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Confirm your password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
             />
+            {errors.confirmPassword && (
+              <p className="text-sm text-red-600">
+                {errors.confirmPassword.message}
+              </p>
+            )}
           </div>
 
           <div>
             <button
               type="submit"
               className="flex justify-center w-full px-4 py-3 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={isLoading}
             >
-              Register
+              {isLoading ? (
+                <div className="animate-spin">
+                  <FaSpinner />
+                </div>
+              ) : (
+                'Register'
+              )}
             </button>
           </div>
         </form>
 
         <p className="mt-8 text-sm text-center text-gray-600">
           Already have an account?{' '}
-          <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+          <Link
+            to="/login"
+            className="font-medium text-blue-600 hover:text-blue-500"
+          >
             Sign In
-          </a>
+          </Link>
         </p>
       </div>
     </div>

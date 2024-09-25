@@ -2,13 +2,15 @@ import z from 'zod';
 
 export const RegisterBody = z
   .object({
-    email: z.string().email('Email không đúng định dạng'),
-    password: z
-      .string()
-      .min(6, 'Mật khẩu tối thiểu phải 6 ký tự')
-      .max(100, 'Mật khẩu không được vượt quá 100 ký tự'),
+    username: z.string().min(1, 'Username is required'),
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(6, 'Password must be at least 6 characters long'),
+    confirmPassword: z.string().min(6, 'Password confirmation is required'),
   })
-  .strict();
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 export type RegisterBodyType = z.TypeOf<typeof RegisterBody>;
 

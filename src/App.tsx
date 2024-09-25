@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// src/App.tsx
+import React, { useContext, useState } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -16,6 +17,19 @@ import Notifications from './pages/Notifications';
 import Customization from './pages/Customization';
 import LoginLayout from './layout/LoginLayout';
 import AdminLayout from './layout/AdminLayout';
+import { AuthContext, AuthProvider } from './contexts/AuthContext';
+
+const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({
+  element,
+}) => {
+  const { isAuthenticated, loading } = useContext(AuthContext);
+
+  if (loading) {
+    return <div>Loading...</div>; // Hiển thị trong lúc kiểm tra token
+  }
+
+  return isAuthenticated ? element : <Navigate to="/login" />;
+};
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
@@ -24,87 +38,130 @@ const App: React.FC = () => {
   const [postContent, setPostContent] = useState<string>('');
 
   return (
-    <Router>
-      <Routes>
-        <Route
-          path="/login"
-          element={
-            <LoginLayout>
-              <Login />
-            </LoginLayout>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <LoginLayout>
-              <Register />
-            </LoginLayout>
-          }
-        />
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              <LoginLayout>
+                <Login />
+              </LoginLayout>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <LoginLayout>
+                <Register />
+              </LoginLayout>
+            }
+          />
+          <Route path="/" element={<Navigate to="/dashboard" />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute
+                element={
+                  <AdminLayout
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                  >
+                    <Dashboard />
+                  </AdminLayout>
+                }
+              />
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute
+                element={
+                  <AdminLayout
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                  >
+                    <UserManagement />
+                  </AdminLayout>
+                }
+              />
+            }
+          />
+          <Route
+            path="/posts"
+            element={
+              <ProtectedRoute
+                element={
+                  <AdminLayout
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                  >
+                    <Posts />
+                  </AdminLayout>
+                }
+              />
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute
+                element={
+                  <AdminLayout
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                  >
+                    <Analytics />
+                  </AdminLayout>
+                }
+              />
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute
+                element={
+                  <AdminLayout
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                  >
+                    <Notifications />
+                  </AdminLayout>
+                }
+              />
+            }
+          />
+          <Route
+            path="/customization"
+            element={
+              <ProtectedRoute
+                element={
+                  <AdminLayout
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                  >
+                    <Customization />
+                  </AdminLayout>
+                }
+              />
+            }
+          />
+        </Routes>
 
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route
-          path="/dashboard"
-          element={
-            <AdminLayout activeTab={activeTab} setActiveTab={setActiveTab}>
-              <Dashboard />
-            </AdminLayout>
-          }
-        />
-        <Route
-          path="/users"
-          element={
-            <AdminLayout activeTab={activeTab} setActiveTab={setActiveTab}>
-              <UserManagement />
-            </AdminLayout>
-          }
-        />
-        <Route
-          path="/posts"
-          element={
-            <AdminLayout activeTab={activeTab} setActiveTab={setActiveTab}>
-              <Posts />
-            </AdminLayout>
-          }
-        />
-        <Route
-          path="/analytics"
-          element={
-            <AdminLayout activeTab={activeTab} setActiveTab={setActiveTab}>
-              <Analytics />
-            </AdminLayout>
-          }
-        />
-        <Route
-          path="/notifications"
-          element={
-            <AdminLayout activeTab={activeTab} setActiveTab={setActiveTab}>
-              <Notifications />
-            </AdminLayout>
-          }
-        />
-        <Route
-          path="/customization"
-          element={
-            <AdminLayout activeTab={activeTab} setActiveTab={setActiveTab}>
-              <Customization />
-            </AdminLayout>
-          }
-        />
-      </Routes>
-
-      {showCreatePost && (
-        <CreatePostModal
-          showCreatePost={showCreatePost}
-          setShowCreatePost={setShowCreatePost}
-          postContent={postContent}
-          setPostContent={setPostContent}
-          selectedTemplate={selectedTemplate}
-          setSelectedTemplate={setSelectedTemplate}
-        />
-      )}
-    </Router>
+        {showCreatePost && (
+          <CreatePostModal
+            showCreatePost={showCreatePost}
+            setShowCreatePost={setShowCreatePost}
+            postContent={postContent}
+            setPostContent={setPostContent}
+            selectedTemplate={selectedTemplate}
+            setSelectedTemplate={setSelectedTemplate}
+          />
+        )}
+      </Router>
+    </AuthProvider>
   );
 };
 

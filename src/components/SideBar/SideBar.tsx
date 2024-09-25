@@ -1,4 +1,5 @@
-import React from 'react';
+// src/components/Sidebar.tsx
+import React, { useContext } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   FiUsers,
@@ -7,7 +8,9 @@ import {
   FiBell,
   FiSettings,
   FiLogIn,
+  FiLogOut,
 } from 'react-icons/fi';
+import { AuthContext } from '../../contexts/AuthContext';
 
 interface SidebarProps {
   activeTab: string;
@@ -15,6 +18,14 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ setActiveTab }) => {
+  const { isAuthenticated, logout } = useContext(AuthContext);
+
+  const handleAuthClick = () => {
+    if (isAuthenticated) {
+      logout();
+    }
+  };
+
   return (
     <nav className="w-64 bg-white shadow-md">
       <div className="p-4">
@@ -48,7 +59,12 @@ const Sidebar: React.FC<SidebarProps> = ({ setActiveTab }) => {
             label: 'Customization',
             path: '/customization',
           },
-          { id: 'login', icon: FiLogIn, label: 'Login', path: '/login' },
+          {
+            id: 'auth',
+            icon: isAuthenticated ? FiLogOut : FiLogIn,
+            label: isAuthenticated ? 'Logout' : 'Login',
+            path: isAuthenticated ? '/' : '/login',
+          },
         ].map((item) => (
           <li key={item.id}>
             <NavLink
@@ -60,7 +76,12 @@ const Sidebar: React.FC<SidebarProps> = ({ setActiveTab }) => {
                     : 'text-gray-600 hover:bg-gray-100'
                 }`
               }
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {
+                setActiveTab(item.id);
+                if (item.id === 'auth') {
+                  handleAuthClick();
+                }
+              }}
             >
               <item.icon className="mr-2" />
               {item.label}
